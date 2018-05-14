@@ -1,17 +1,18 @@
 {
   "name": "dontbeupsetti",
   "version": "1.0.0",
-  "description": "",
+  "description": "tweets spaghetti so you won't be upsetti",
   "main": "index.js",
   "scripts": {
+	"start": "node bot.js"
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Jaylooker/dontbeupsetti.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["twitter", "bot", "spaghetti", "upsetti"],
+  "author": "Jack Bartolone",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/Jaylooker/dontbeupsetti/issues"
