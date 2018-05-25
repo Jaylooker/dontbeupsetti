@@ -7,4 +7,4 @@ Twitter bot that tweets spaghetti. Follow @dontbeupsetti.
 + [node.js](https://nodejs.org/en/) - network library
 + [npm](https://www.npmjs.com/) - package manager
 + [twit](https://www.npmjs.com/package/twit) - twitter API client 
-+ [node-twitterbot](https://www.npmjs.com/package/node-twitterbot) - twitter bot library
++ [twitterbot](https://www.npmjs.com/package/twitterbot) - twitter bot wrapper
