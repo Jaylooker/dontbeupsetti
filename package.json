@@ -4,14 +4,19 @@
   "description": "tweets spaghetti so you won't be upsetti",
   "main": "index.js",
   "scripts": {
-	"start": "node bot.js"
+    "start": "node bot.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Jaylooker/dontbeupsetti.git"
   },
-  "keywords": ["twitter", "bot", "spaghetti", "upsetti"],
+  "keywords": [
+    "twitter",
+    "bot",
+    "spaghetti",
+    "upsetti"
+  ],
   "author": "Jack Bartolone",
   "license": "ISC",
   "bugs": {
@@ -19,7 +24,9 @@
   },
   "homepage": "https://github.com/Jaylooker/dontbeupsetti#readme",
   "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
     "node-twitterbot": "^0.2.2",
+    "pexels-api-wrapper": "^1.0.9",
     "twit": "^2.2.9"
   }
 }
