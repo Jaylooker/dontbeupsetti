@@ -24,10 +24,12 @@
   },
   "homepage": "https://github.com/Jaylooker/dontbeupsetti#readme",
   "dependencies": {
+    "big-json": "^2.0.2",
     "cheerio": "^1.0.0-rc.2",
     "giphy-js-sdk-core": "^1.0.3",
     "node-twitterbot": "^0.2.2",
     "pexels-api-wrapper": "^1.0.9",
+    "pixabayjs": "^2.0.3",
     "twit": "^2.2.9"
   }
 }

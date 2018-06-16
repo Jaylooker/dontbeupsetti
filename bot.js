@@ -1,6 +1,8 @@
 var twit = require('twit');
 var twitterbot = require('node-twitterbot').TwitterBot;
+var json = require('big-json');
 var pexelapi = require('pexels-api-wrapper');
+var pixabayclient = require('pixabayjs');
 var giphyapi = require('giphy-js-sdk-core');
 
 //Assign bot to account
@@ -15,39 +17,59 @@ var bot = new TwitterBot({
 var pexelclient = pexelapi(process.env.PEXEL_API_KEY);
 
 //Assign Pixabay API key 
-var pixabaykey = process.env.PIXABAY_API_KEY;
+pixabayclient.authenticate(process.env.PIXABAY_API_KEY);
+pixabayclient.defaults = {safesearch: true};
 
 //Assign Giphy API
 var giphyclient = GphApiClient(process.env.GIPHY_API_KEY);
 
 //Get spaghetti photos and gifs
 
-//pasta results for Pexel
-/*pixelclient.search("pasta", 10, 1)
-.then((response) => 
+//function for Pexel
+function searchpixel(word, resultsperpage, page)
 {
-})
-.catch ((err)) =>
-{
-	
-}
-*/
-
-//pasta results for Pixabay
-//var pastaurl = "https://pixabay.com/api/?key=" + pixabaykey + "&q" + encodeURIComponent("pasta");
-
-//pasta results for Giphy
-/*giphyclient.search('gifs', {"q": "pasta"})
-.then((response) => {
-	response.data.foreach(gifObject) => {
-		console.log(gifObject);
+	pixelclient.search(word, resultsperpage, page)
+	.then(response => 
+	{
+	return JSON.parse(response);
 	})
-})
-.catch ((err)) => 
+	.catch (err =>
+	{
+	console.log(err);
+	return -1;
+	});
+}
+
+//function for Pixabay
+function searchpixabay(wordarray) {
+	return pixabayclient.imageResultList(wordarray, pixabayoptions, pixabaysuccess, pixabaysuccess)
+}
+
+var pixabayoptions = {} 
+
+var pixabaysuccess = response => {
+	return JSON.parse(response);
+}
+
+var pixabayfailure = err => {
+	console.log(err);
+	return -1;
+}
+
+//function for Giphy
+function searchgiphy(word) 
 {
-	
-})
-*/
+	giphyclient.search('gifs', {"q": word})
+	.then(response => 
+	{
+		return JSON.parse(response);
+	})
+	.catch (err =>
+	{
+		console.log(err);
+		return -1;
+	});
+}
 
 //Store IDs of posted media in db possibly
 
