@@ -25,10 +25,14 @@ var giphyclient = GphApiClient(process.env.GIPHY_API_KEY);
 
 //Get spaghetti photos and gifs
 
-//function for Pexel
-function searchpixel(word, resultsperpage, page)
+/**
+* Returns search results of images from Pexel API
+* @param {string} word search term
+* @returns {JSON} Parsed json object of results
+*/
+function searchpexel(word)
 {
-	pixelclient.search(word, resultsperpage, page)
+	pexelclient.search(word)
 	.then(response => 
 	{
 	return JSON.parse(response);
@@ -40,7 +44,11 @@ function searchpixel(word, resultsperpage, page)
 	});
 }
 
-//function for Pixabay
+/**
+* Returns search results of images from Pixabay API
+* @param {string[]} wordarray array of search term
+* @returns {JSON} Parsed json object of results
+*/
 function searchpixabay(wordarray) {
 	return pixabayclient.imageResultList(wordarray, pixabayoptions, pixabaysuccess, pixabaysuccess)
 }
@@ -56,7 +64,11 @@ var pixabayfailure = err => {
 	return -1;
 }
 
-//function for Giphy
+/**
+* Returns search results of images from Giphy API
+* @param {string} word search term
+* @returns {JSON} Parsed json object of results
+*/
 function searchgiphy(word) 
 {
 	giphyclient.search('gifs', {"q": word})
@@ -69,6 +81,75 @@ function searchgiphy(word)
 		console.log(err);
 		return -1;
 	});
+}
+
+/**
+* Returns an image from one Pexel API json object 
+* @param {JSON} parsedjsonobject parsed json object
+* @returns {Image} image image object
+*/
+function getpexelsource(parsedjsonobject) 
+{
+	var image = new Image();
+	
+	image.src = parsedjsonobject.src.medium;
+
+	return image;
+}
+
+/**
+* Return an image from one Pixabay API json object
+* @param {JSON} parsedjsonobject parsed json object
+* @returns {Image} image image object
+*/
+function getpixabaysource(parsedjsonobject) 
+{
+	var image = new Image();
+
+	image.src = parsedjsonobject.imageURL;
+
+	return image;
+}
+
+/**
+* Returns an gif from one Giphy API jsonobject
+* @param {JSON} parsedjsonobject parsed json object
+* @returns {File} gif file object of gif
+*/
+function getgiphysource(parsedjsonobject) 
+{
+	var gif = new File();
+	//todo saving .gif from source
+}
+
+/**
+* Returns id of pexel image
+* @param {JSON} parsedjsonobject parsed json object
+* @returns {string} id of image
+*/
+function getpexelid(parsedjsonobject)
+{
+	return parsedjsonobject.url.replace("https://www.pexels.com/photo/", "");
+}
+
+/**
+* Returns id of pixabay image
+* @param {JSON} parsedjsonobject parsed json object
+* @returns {string} id of image
+*/
+function getpixabayid(parsedjsonobject)
+{
+	return parsedjsonobject.id;
+}
+
+/**
+* Returns of gihpy gif
+* @param {JSON} parsedjsonobject parsed json object
+* @returns {string} id of image
+*/
+function getgiphyid(parsedjsonobject)
+{
+	return parsedjsonobject.id;
 }
 
 //Store IDs of posted media in db possibly
