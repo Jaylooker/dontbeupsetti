@@ -1,4 +1,3 @@
-var twit = require('twit');
 var twitterbot = require('node-twitterbot').TwitterBot;
 var json = require('big-json');
 var pexelapi = require('pexels-api-wrapper');
@@ -6,7 +5,7 @@ var pixabayclient = require('pixabayjs');
 var giphyapi = require('giphy-js-sdk-core');
 
 //Assign bot to account
-var bot = new TwitterBot({
+var bot = new twitterbot({
  consumer_key: process.env.BOT_CONSUMER_KEY,
  consumer_secret: process.env.BOT_CONSUMER_SECRET,
  access_token: process.env.BOT_ACCESS_TOKEN,
@@ -33,11 +32,11 @@ var giphyclient = GphApiClient(process.env.GIPHY_API_KEY);
 function searchpexel(word)
 {
 	pexelclient.search(word)
-	.then(response => 
+	.then((response) => 
 	{
 	return JSON.parse(response);
 	})
-	.catch (err =>
+	.catch ((err) =>
 	{
 	console.log(err);
 	return -1;
@@ -50,16 +49,16 @@ function searchpexel(word)
 * @returns {JSON} Parsed json object of results
 */
 function searchpixabay(wordarray) {
-	return pixabayclient.imageResultList(wordarray, pixabayoptions, pixabaysuccess, pixabaysuccess)
+	return pixabayclient.imageResultList(wordarray, pixabayoptions, pixabaysuccess, pixabayfailure)
 }
 
 var pixabayoptions = {} 
 
-var pixabaysuccess = response => {
+var pixabaysuccess = (response) => {
 	return JSON.parse(response);
 }
 
-var pixabayfailure = err => {
+var pixabayfailure = (err) => {
 	console.log(err);
 	return -1;
 }
@@ -72,11 +71,11 @@ var pixabayfailure = err => {
 function searchgiphy(word) 
 {
 	giphyclient.search('gifs', {"q": word})
-	.then(response => 
+	.then((response) => 
 	{
 		return JSON.parse(response);
 	})
-	.catch (err =>
+	.catch ((err) =>
 	{
 		console.log(err);
 		return -1;
@@ -84,42 +83,33 @@ function searchgiphy(word)
 }
 
 /**
-* Returns an image from one Pexel API json object 
+* Returns the image URL from one Pexel API json object 
 * @param {JSON} parsedjsonobject parsed json object
-* @returns {Image} image image object
+* @returns {string} image URL
 */
-function getpexelsource(parsedjsonobject) 
+function getpexelURL(parsedjsonobject) 
 {
-	var image = new Image();
-	
-	image.src = parsedjsonobject.src.medium;
-
-	return image;
+	return parsedjsonobject.src.medium;
 }
 
 /**
-* Return an image from one Pixabay API json object
+* Return the image URL from one Pixabay API json object
 * @param {JSON} parsedjsonobject parsed json object
-* @returns {Image} image image object
+* @returns {string} image URL
 */
-function getpixabaysource(parsedjsonobject) 
+function getpixabayURL(parsedjsonobject) 
 {
-	var image = new Image();
-
-	image.src = parsedjsonobject.imageURL;
-
-	return image;
+	return parsedjsonobject.imageURL;
 }
 
 /**
-* Returns an gif from one Giphy API jsonobject
+* Returns the gif URL from one Giphy API jsonobject
 * @param {JSON} parsedjsonobject parsed json object
-* @returns {File} gif file object of gif
+* @returns {string} gif URL
 */
-function getgiphysource(parsedjsonobject) 
+function getgiphyURL(parsedjsonobject) 
 {
-	var gif = new File();
-	//todo saving .gif from source
+	return parsedjsonobject.images.original.url
 }
 
 /**
@@ -143,7 +133,7 @@ function getpixabayid(parsedjsonobject)
 }
 
 /**
-* Returns of gihpy gif
+* Returns id of gihpy gif
 * @param {JSON} parsedjsonobject parsed json object
 * @returns {string} id of image
 */
@@ -152,6 +142,21 @@ function getgiphyid(parsedjsonobject)
 	return parsedjsonobject.id;
 }
 
+/**
+* Tweets a string
+* @param {string} string string to tweet
+*/
+function tweetstring(string) {
+	bot.tweet(string, (err, response) => {
+		if(err) {
+			console.log(err);
+		}
+	})
+}
+
+//Tweet URLs of images and gifs  
+
 //Store IDs of posted media in db possibly
+//todo find reliable storage 
 
 //Tweet at longer than long enough intervals 
