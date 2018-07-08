@@ -124,6 +124,7 @@ function getpexelid(parsedjsonobject)
 
 /**
 * Returns id of pixabay image
+* Note: Duplicate of getgiphyid() as API may change in future
 * @param {JSON} parsedjsonobject parsed json object
 * @returns {string} id of image
 */
@@ -134,6 +135,7 @@ function getpixabayid(parsedjsonobject)
 
 /**
 * Returns id of gihpy gif
+* Note: Duplicate of getpixabayid() as API may change in future
 * @param {JSON} parsedjsonobject parsed json object
 * @returns {string} id of image
 */
