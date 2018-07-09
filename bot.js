@@ -20,7 +20,7 @@ pixabayclient.authenticate(process.env.PIXABAY_API_KEY);
 pixabayclient.defaults = {safesearch: true};
 
 //Assign Giphy API
-var giphyclient = GphApiClient(process.env.GIPHY_API_KEY);
+var giphyclient = giphyapi(process.env.GIPHY_API_KEY);
 
 //Get spaghetti photos and gifs
 
@@ -38,8 +38,8 @@ function searchpexel(word)
 	})
 	.catch ((err) =>
 	{
-	console.log(err);
-	return -1;
+	console.log("searchpexel() error: " + err);
+	return {"error": err };
 	});
 }
 
@@ -59,8 +59,8 @@ var pixabaysuccess = (response) => {
 }
 
 var pixabayfailure = (err) => {
-	console.log(err);
-	return -1;
+	console.log("searchpixabay() error: "+ err);
+	return {"error": err };
 }
 
 /**
@@ -77,8 +77,8 @@ function searchgiphy(word)
 	})
 	.catch ((err) =>
 	{
-		console.log(err);
-		return -1;
+		console.log("searchgiphy() error: " + err);
+		return {"error": err };
 	});
 }
 
@@ -151,7 +151,7 @@ function getgiphyid(parsedjsonobject)
 function tweetstring(string) {
 	bot.tweet(string, (err, response) => {
 		if(err) {
-			console.log(err);
+			console.log("tweetstring() error: "+ err);
 		}
 	})
 }
