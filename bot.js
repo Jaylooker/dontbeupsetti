@@ -1,8 +1,16 @@
+/**
+ * @author Jack Bartolone
+ * @description Javascript Twitter bot that tweets spaghetti images and gifs
+ * @copyright Jack Bartolone 2018
+ * @license ISC 
+ */
+
 var twitterbot = require('node-twitterbot').TwitterBot;
 var json = require('big-json');
 var pexelapi = require('pexels-api-wrapper');
-var pixabayclient = require('pixabayjs');
+var pixabayclient = require('pixabayjs'); //has vulnerabilities from packages, show check out
 var giphyapi = require('giphy-js-sdk-core');
+var pg = require('pg');
 
 //Assign bot to account
 var bot = new twitterbot({
@@ -22,7 +30,31 @@ pixabayclient.defaults = {safesearch: true};
 //Assign Giphy API
 var giphyclient = giphyapi(process.env.GIPHY_API_KEY);
 
-//Get spaghetti photos and gifs
+//Assign DB connection
+db = new pg.Client({ 
+	connectionString: process.env.DATABASE_URL,
+	ssl: true
+})
+
+//connect DB
+db.connect();
+
+//Store IDs of posted media in db possibly
+
+//Tweet URLs of images and gifs 
+bot.addAction("postpexelimg", (twitter, action, tweet) => {
+	tweetstring(queryrandomrow("pexel"));
+});
+
+bot.addAction("postpixabayimg", (twitter, action, tweet) => {
+	tweetstring(queryrandomrow("pixabay"));
+});
+
+bot.addAction("postgiphygif", (twitter, action, tweet) => {
+	tweetstring(queryrandomrow("giphy"));
+});
+
+//Tweet at longer than long enough intervals 
 
 /**
 * Returns search results of images from Pexel API
@@ -150,15 +182,32 @@ function getgiphyid(parsedjsonobject)
 */
 function tweetstring(string) {
 	bot.tweet(string, (err, response) => {
+		if(string == null) {
+			console.log("tweetstring() error: null string");
+			return;
+		}
 		if(err) {
 			console.log("tweetstring() error: "+ err);
 		}
 	})
 }
 
-//Tweet URLs of images and gifs  
-
-//Store IDs of posted media in db possibly
-//todo find reliable storage 
-
-//Tweet at longer than long enough intervals 
+/**
+* Queries random row from select media table and returns its URL
+* @param {string} table name of table to query 
+* @returns {string} URL of media
+*/
+function queryrandomrow(table) {
+	db.query("SELECT id " + 
+			"FROM " + table + 
+			" OFFSET  floor(random() * (" +
+				"SELECT COUNT(*) " + 
+				"FROM " + table + ") " +
+				"LIMIT 1" , (err, res) => {
+		if(err) {
+			console.log("queryrandomrow() error: " + err);
+			return;
+		}
+		return res;
+	});
+}

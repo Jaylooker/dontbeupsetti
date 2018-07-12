@@ -29,7 +29,8 @@
     "giphy-js-sdk-core": "^1.0.3",
     "node-twitterbot": "^0.2.2",
     "pexels-api-wrapper": "^1.0.9",
-    "pixabayjs": "^2.0.3",
+    "pg": "^7.4.3",
+    "pixabayjs": "^2.0.4",
     "twit": "^2.2.9"
   }
 }
