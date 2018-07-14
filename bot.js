@@ -5,12 +5,12 @@
  * @license ISC 
  */
 
-var twitterbot = require('node-twitterbot').TwitterBot;
-var json = require('big-json');
-var pexelapi = require('pexels-api-wrapper');
-var pixabayclient = require('pixabayjs'); //has vulnerabilities from packages, show check out
-var giphyapi = require('giphy-js-sdk-core');
-var pg = require('pg');
+const twitterbot = require('node-twitterbot').TwitterBot; //CommonJS module
+const json = require('big-json');
+const pexelapi = require('pexels-api-wrapper');
+const pixabayclient = require('pixabayjs'); //has vulnerabilities from packages, update superagent package
+const giphyapi = require('giphy-js-sdk-core');
+const { Client } = require('pg');
 
 //Assign bot to account
 var bot = new twitterbot({
@@ -31,13 +31,19 @@ pixabayclient.defaults = {safesearch: true};
 var giphyclient = giphyapi(process.env.GIPHY_API_KEY);
 
 //Assign DB connection
-db = new pg.Client({ 
+const db = new Client({ 
 	connectionString: process.env.DATABASE_URL,
 	ssl: true
 })
 
 //connect DB
-db.connect();
+db.connect()
+.catch((err) => {
+	console.log("database.connect() error: " + err)
+});
+
+// spaghetti read to be stored
+var spaghetti = searchall("spaghetti");
 
 //Store IDs of posted media in db possibly
 
@@ -57,12 +63,28 @@ bot.addAction("postgiphygif", (twitter, action, tweet) => {
 //Tweet at longer than long enough intervals 
 
 /**
+* Returns search results from all API
+* @param {string} word search term
+* @returns {JSON} Json object of results 
+*/
+function searchall(word) {
+	var resultpexel = searchpexel(word);
+	var resultpixabay = searchpixabay([word]);
+	var resultgiphy = searchgiphy(word);
+
+	return { 
+		pexel: resultpexel,
+		pixabay: resultpixabay,
+		giphy: pixabay
+	}
+}
+
+/**
 * Returns search results of images from Pexel API
 * @param {string} word search term
 * @returns {JSON} Parsed json object of results
 */
-function searchpexel(word)
-{
+function searchpexel(word) {
 	pexelclient.search(word)
 	.then((response) => 
 	{
@@ -81,7 +103,7 @@ function searchpexel(word)
 * @returns {JSON} Parsed json object of results
 */
 function searchpixabay(wordarray) {
-	return pixabayclient.imageResultList(wordarray, pixabayoptions, pixabaysuccess, pixabayfailure)
+	return pixabayclient.imageResultList(wordarray, pixabayoptions, pixabaysuccess, pixabayfailure);
 }
 
 var pixabayoptions = {} 
@@ -100,8 +122,7 @@ var pixabayfailure = (err) => {
 * @param {string} word search term
 * @returns {JSON} Parsed json object of results
 */
-function searchgiphy(word) 
-{
+function searchgiphy(word) {
 	giphyclient.search('gifs', {"q": word})
 	.then((response) => 
 	{
@@ -119,8 +140,7 @@ function searchgiphy(word)
 * @param {JSON} parsedjsonobject parsed json object
 * @returns {string} image URL
 */
-function getpexelURL(parsedjsonobject) 
-{
+function getpexelURL(parsedjsonobject) {
 	return parsedjsonobject.src.medium;
 }
 
@@ -129,8 +149,7 @@ function getpexelURL(parsedjsonobject)
 * @param {JSON} parsedjsonobject parsed json object
 * @returns {string} image URL
 */
-function getpixabayURL(parsedjsonobject) 
-{
+function getpixabayURL(parsedjsonobject) {
 	return parsedjsonobject.imageURL;
 }
 
@@ -139,8 +158,7 @@ function getpixabayURL(parsedjsonobject)
 * @param {JSON} parsedjsonobject parsed json object
 * @returns {string} gif URL
 */
-function getgiphyURL(parsedjsonobject) 
-{
+function getgiphyURL(parsedjsonobject) {
 	return parsedjsonobject.images.original.url
 }
 
@@ -149,8 +167,7 @@ function getgiphyURL(parsedjsonobject)
 * @param {JSON} parsedjsonobject parsed json object
 * @returns {string} id of image
 */
-function getpexelid(parsedjsonobject)
-{
+function getpexelid(parsedjsonobject) {
 	return parsedjsonobject.url.replace("https://www.pexels.com/photo/", "");
 }
 
@@ -160,8 +177,7 @@ function getpexelid(parsedjsonobject)
 * @param {JSON} parsedjsonobject parsed json object
 * @returns {string} id of image
 */
-function getpixabayid(parsedjsonobject)
-{
+function getpixabayid(parsedjsonobject) {
 	return parsedjsonobject.id;
 }
 
@@ -171,8 +187,7 @@ function getpixabayid(parsedjsonobject)
 * @param {JSON} parsedjsonobject parsed json object
 * @returns {string} id of image
 */
-function getgiphyid(parsedjsonobject)
-{
+function getgiphyid(parsedjsonobject){
 	return parsedjsonobject.id;
 }
 
@@ -196,18 +211,35 @@ function tweetstring(string) {
 * Queries random row from select media table and returns its URL
 * @param {string} table name of table to query 
 * @returns {string} URL of media
+* Note: should be done server side with PL/pgSQL but current setup through Heroku requires done client side
 */
 function queryrandomrow(table) {
 	db.query("SELECT id " + 
-			"FROM " + table + 
+			"FROM $1" + 
 			" OFFSET  floor(random() * (" +
 				"SELECT COUNT(*) " + 
-				"FROM " + table + ") " +
-				"LIMIT 1" , (err, res) => {
-		if(err) {
+				"FROM $1) " +
+				"LIMIT 1" , [table])
+		.then((res) => {
+			return res;
+		})
+		.catch((err) => {
 			console.log("queryrandomrow() error: " + err);
 			return;
-		}
-		return res;
-	});
+		});
+
+}
+
+/**
+* Stores id, URL pair in a table
+* @param {string} table name of table to query 
+* @param {string} id of table to query 
+* @param {string} url name of table to query 
+* Note: should be done server side with PL/pgSQL but current setup through Heroku requires done client side
+*/
+function storevalues(table, id, url) {
+	db.query("INSERT INTO $1 (id, url) VALUES ($2, $3)", [table, id, url])
+	.catch((err) => {
+		console.log("storevalues() error: " + err);
+	})
 }
