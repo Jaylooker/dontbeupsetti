@@ -11,6 +11,7 @@ const pexelapi = require('pexels-api-wrapper');
 const pixabayclient = require('pixabayjs'); //has vulnerabilities from packages, update superagent package
 const giphyapi = require('giphy-js-sdk-core');
 const { Client } = require('pg');
+const fs = require('fs');
 
 //Assign bot to account
 var bot = new twitterbot({
@@ -42,8 +43,34 @@ db.connect()
 	console.log("database.connect() error: " + err)
 });
 
-// spaghetti read to be stored
+var parsepexel = json.createParseStream();
+var parsepixabay = json.createParseStream();
+var paresegiphy = json.createParseStream();
+
+parsepexel.on("data", (object) => {
+	var id = getpexelid(object);
+	var url = getpexelURL(object);
+	storevalues("pexel", id, url);
+});
+
+parsepixabay.on("data", (object) => {
+	var id = getpixabayid(object);
+	var url = getpixabayURL(object);
+	storevalues("pixabay", id, url);
+});
+
+parsegiphy.on("data", (object) => {
+	var id = getgiphyid(object);
+	var url = getgiphyURL(object);
+	storevalues("pexel", id, url);
+});
+
+
+//spaghetti read to be stored
 var spaghetti = searchall("spaghetti");
+//pipe to data storage
+var readstream = fs.createReadStream(spaghetti.pexel);
+readstream.pipe(parsestream);
 
 //Store IDs of posted media in db possibly
 
@@ -65,7 +92,7 @@ bot.addAction("postgiphygif", (twitter, action, tweet) => {
 /**
 * Returns search results from all API
 * @param {string} word search term
-* @returns {JSON} Json object of results 
+* @returns {JSON} json object of results 
 */
 function searchall(word) {
 	var resultpexel = searchpexel(word);
@@ -75,14 +102,14 @@ function searchall(word) {
 	return { 
 		pexel: resultpexel,
 		pixabay: resultpixabay,
-		giphy: pixabay
+		giphy: resultgiphy
 	}
 }
 
 /**
 * Returns search results of images from Pexel API
 * @param {string} word search term
-* @returns {JSON} Parsed json object of results
+* @returns {JSON}  json object of results
 */
 function searchpexel(word) {
 	pexelclient.search(word)
@@ -100,7 +127,7 @@ function searchpexel(word) {
 /**
 * Returns search results of images from Pixabay API
 * @param {string[]} wordarray array of search term
-* @returns {JSON} Parsed json object of results
+* @returns {JSON}  json object of results
 */
 function searchpixabay(wordarray) {
 	return pixabayclient.imageResultList(wordarray, pixabayoptions, pixabaysuccess, pixabayfailure);
@@ -120,7 +147,7 @@ var pixabayfailure = (err) => {
 /**
 * Returns search results of images from Giphy API
 * @param {string} word search term
-* @returns {JSON} Parsed json object of results
+* @returns {JSON}  json object of results
 */
 function searchgiphy(word) {
 	giphyclient.search('gifs', {"q": word})
@@ -137,59 +164,61 @@ function searchgiphy(word) {
 
 /**
 * Returns the image URL from one Pexel API json object 
-* @param {JSON} parsedjsonobject parsed json object
+* @param {JSON} jsonobject  json object
 * @returns {string} image URL
 */
-function getpexelURL(parsedjsonobject) {
-	return parsedjsonobject.src.medium;
+function getpexelURL(jsonobject) {
+	return jsonobject.src.medium;
 }
 
 /**
 * Return the image URL from one Pixabay API json object
-* @param {JSON} parsedjsonobject parsed json object
+* @param {JSON} jsonobject  json object
 * @returns {string} image URL
 */
-function getpixabayURL(parsedjsonobject) {
-	return parsedjsonobject.imageURL;
+function getpixabayURL(jsonobject) {
+	return jsonobject.imageURL;
 }
 
 /**
 * Returns the gif URL from one Giphy API jsonobject
-* @param {JSON} parsedjsonobject parsed json object
+* @param {JSON} jsonobject  json object
 * @returns {string} gif URL
 */
-function getgiphyURL(parsedjsonobject) {
-	return parsedjsonobject.images.original.url
+function getgiphyURL(jsonobject) {
+	return jsonobject.images.original.url
 }
 
 /**
 * Returns id of pexel image
-* @param {JSON} parsedjsonobject parsed json object
+* @param {JSON} jsonobject  json object
 * @returns {string} id of image
 */
-function getpexelid(parsedjsonobject) {
-	return parsedjsonobject.url.replace("https://www.pexels.com/photo/", "");
+function getpexelid(jsonobject) {
+	return jsonobject.url.replace("https://www.pexels.com/photo/", "");
 }
 
 /**
 * Returns id of pixabay image
 * Note: Duplicate of getgiphyid() as API may change in future
-* @param {JSON} parsedjsonobject parsed json object
+* @param {JSON} jsonobject  json object
 * @returns {string} id of image
 */
-function getpixabayid(parsedjsonobject) {
-	return parsedjsonobject.id;
+function getpixabayid(jsonobject) {
+	return jsonobject.id;
 }
 
 /**
 * Returns id of gihpy gif
 * Note: Duplicate of getpixabayid() as API may change in future
-* @param {JSON} parsedjsonobject parsed json object
+* @param {JSON} jsonobject json object
 * @returns {string} id of image
 */
-function getgiphyid(parsedjsonobject){
-	return parsedjsonobject.id;
+function getgiphyid(jsonobject){
+	return jsonobject.id;
 }
+
+
 
 /**
 * Tweets a string
@@ -197,10 +226,6 @@ function getgiphyid(parsedjsonobject){
 */
 function tweetstring(string) {
 	bot.tweet(string, (err, response) => {
-		if(string == null) {
-			console.log("tweetstring() error: null string");
-			return;
-		}
 		if(err) {
 			console.log("tweetstring() error: "+ err);
 		}
