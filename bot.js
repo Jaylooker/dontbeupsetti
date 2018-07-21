@@ -43,28 +43,33 @@ db.connect()
 	console.log("database.connect() error: " + err)
 });
 
+//4 hours in ms
+const FOUR_HOURS = 14400000; 
+//6 hours in ms
+const SIX_HOURS = 21600000;
+
+//parse streams
 var parsepexel = json.createParseStream();
 var parsepixabay = json.createParseStream();
-var paresegiphy = json.createParseStream();
+var parsegiphy = json.createParseStream();
 
 parsepexel.on("data", (object) => {
-	var id = getpexelid(object);
-	var url = getpexelURL(object);
+	var id = object.url.replace("https://www.pexels.com/photo/", "");
+	var url = object.src.medium;
 	storevalues("pexel", id, url);
 });
 
 parsepixabay.on("data", (object) => {
-	var id = getpixabayid(object);
-	var url = getpixabayURL(object);
+	var id = object.id;
+	var url = object.imageURL;
 	storevalues("pixabay", id, url);
 });
 
 parsegiphy.on("data", (object) => {
-	var id = getgiphyid(object);
-	var url = getgiphyURL(object);
+	var id = object.id;
+	var url = jsonobject.images.original.url;
 	storevalues("pexel", id, url);
 });
-
 
 //spaghetti read to be stored
 var spaghetti = searchall("spaghetti");
@@ -77,17 +82,38 @@ readstream.pipe(parsestream);
 //Tweet URLs of images and gifs 
 bot.addAction("postpexelimg", (twitter, action, tweet) => {
 	tweetstring(queryrandomrow("pexel"));
+	var time = getRandomInt(FOUR_HOURS, SIX_HOURS);
+	action.schedule(time);
+	
 });
 
 bot.addAction("postpixabayimg", (twitter, action, tweet) => {
 	tweetstring(queryrandomrow("pixabay"));
+	var time = getRandomInt(FOUR_HOURS, SIX_HOURS);
+	action.schedule(time);
 });
 
 bot.addAction("postgiphygif", (twitter, action, tweet) => {
 	tweetstring(queryrandomrow("giphy"));
+	var time = getRandomInt(FOUR_HOURS, SIX_HOURS);
+	action.schedule(time);
 });
 
 //Tweet at longer than long enough intervals 
+
+/**
+ * Returns random number between a minimum and maximum.
+ * Implements Mozilla function for finding value. 
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random | Documentation} 
+ * @param {number} min minimum
+ * @param {number} max maximum
+ * @returns {number} random  
+ */
+function getRandomInt(min, max) {
+	min = Math.ceil(min);
+	max = Math.floor(max);
+	return Math.floor(Math.random() * (max - min)) + min;
+}
 
 /**
 * Returns search results from all API
@@ -130,10 +156,8 @@ function searchpexel(word) {
 * @returns {JSON}  json object of results
 */
 function searchpixabay(wordarray) {
-	return pixabayclient.imageResultList(wordarray, pixabayoptions, pixabaysuccess, pixabayfailure);
+	return pixabayclient.imageResultList(wordarray, {} , pixabaysuccess, pixabayfailure);
 }
-
-var pixabayoptions = {} 
 
 var pixabaysuccess = (response) => {
 	return JSON.parse(response);
@@ -161,64 +185,6 @@ function searchgiphy(word) {
 		return {"error": err };
 	});
 }
-
-/**
-* Returns the image URL from one Pexel API json object 
-* @param {JSON} jsonobject  json object
-* @returns {string} image URL
-*/
-function getpexelURL(jsonobject) {
-	return jsonobject.src.medium;
-}
-
-/**
-* Return the image URL from one Pixabay API json object
-* @param {JSON} jsonobject  json object
-* @returns {string} image URL
-*/
-function getpixabayURL(jsonobject) {
-	return jsonobject.imageURL;
-}
-
-/**
-* Returns the gif URL from one Giphy API jsonobject
-* @param {JSON} jsonobject  json object
-* @returns {string} gif URL
-*/
-function getgiphyURL(jsonobject) {
-	return jsonobject.images.original.url
-}
-
-/**
-* Returns id of pexel image
-* @param {JSON} jsonobject  json object
-* @returns {string} id of image
-*/
-function getpexelid(jsonobject) {
-	return jsonobject.url.replace("https://www.pexels.com/photo/", "");
-}
-
-/**
-* Returns id of pixabay image
-* Note: Duplicate of getgiphyid() as API may change in future
-* @param {JSON} jsonobject  json object
-* @returns {string} id of image
-*/
-function getpixabayid(jsonobject) {
-	return jsonobject.id;
-}
-
-/**
-* Returns id of gihpy gif
-* Note: Duplicate of getpixabayid() as API may change in future
-* @param {JSON} jsonobject json object
-* @returns {string} id of image
-*/
-function getgiphyid(jsonobject){
-	return jsonobject.id;
-}
-
-
 
 /**
 * Tweets a string
